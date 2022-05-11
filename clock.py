@@ -292,7 +292,7 @@ class Clock(object):
             
             # desenha o acabamento
             self.canvas.create_oval((self.center[0]*1.04), (self.center[1]*1.04), (self.center[0]*0.96), 
-                                    (self.center[1]*0.96), fill='white')
+                                    (self.center[1]*0.96), fill='white', tag='handle')
 
             # Desenha a base do ponteiro
             self.canvas.create_line(self.center[0], self.center[1], x_start, y_start, tag = 'handle', fill='white', 
@@ -302,12 +302,10 @@ class Clock(object):
             self.canvas.create_line(x_start, y_start, x, y, tag = 'handle', fill='white', width=wid, capstyle='round')
             self.canvas.create_line(x_start, y_start, x, y, tag = 'handle', fill=color, width=wid*0.6, capstyle='round')
         else:
-            x_start = self.center[0]
-            y_start = self.center[1]
             
             # desenha o acabamento
             self.canvas.create_oval((self.center[0]*1.03), (self.center[1]*1.03), (self.center[0]*0.97), 
-                                    (self.center[1]*0.97), fill=color)
+                                    (self.center[1]*0.97), fill=color, tag='handle')
             if extend:
                 x_start, y_start = self.polar2Cartesian(angle, -0.1)
                 x_start += self.center[0]
