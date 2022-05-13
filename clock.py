@@ -36,20 +36,42 @@ class Clock(object):
         self.readFile()
         
         self.root = root
+        self.new_value = 584/2
         self.canvas_height = 584
         self.canvas_width = 584
         self.canvas = Canvas(self.root, height=self.canvas_height, width=self.canvas_width, bg='black')
-        self.canvas.pack(expand=True)
+        self.canvas.pack(side= TOP, fill='both', expand=True)
         
         
         self.center = (self.canvas_height/2, self.canvas_width/2)
-        self.drawArcSun()
+        # self.drawArcSun()
         
         # Função que permite o loop e atualização frequente do relógio
         self.poll()
         
         # Evento que gera o evento do clique e permite inputar um fuso horário
         self.canvas.bind('<Double-Button-1>', self.fuses)
+        self.canvas.bind('<Configure>', self.resize)
+        
+    
+    def resize(self, event):
+        self.canvas.delete(ALL)
+        if self.root.winfo_height() <= self.root.winfo_width():
+            self.new_value = self.root.winfo_height()/2
+            self.canvas_width = self.canvas_height = self.root.winfo_height()
+        else:
+            self.new_value = self.root.winfo_width()/2
+            self.canvas_width = self.canvas_height = self.root.winfo_width()
+        #self.canvas.create_rectangle(0,0, self.canvas_height, self.canvas_width, fill='black')
+        #self.canvas = Canvas(self.root, height=self.canvas_height, width=self.canvas_width, bg='black')
+        #self.canvas.pack(expand=True)
+        self.canvas.configure(width=self.canvas_width, height=self.canvas_height)
+        
+        self.center = (self.root.winfo_width()/2, self.root.winfo_height()/2)
+        self.drawArcSun()
+        # self.drawNumber()
+        # self.drawNumberGmt()
+        # self.poll()
     
     
     ##
@@ -223,18 +245,24 @@ class Clock(object):
             # Extent são as extensões do arco.
             extent_set = -hrise + hset
             extent_rise = 360 - extent_set
-    
+        
+        x1, y1 = self.polar2Cartesian(21*pi/12, 1.35)
+        x2, y2 = self.polar2Cartesian(9*pi/12, 1.35)
+        x1 += self.center[0]
+        y1 += self.center[1]
+        x2 += self.center[0]
+        y2 += self.center[1]
         # Cria o arco azul, começando no horario do nascer do sol e indo até o por do sol.
-        self.canvas.create_arc((self.canvas_height*0.02), (self.canvas_width*0.02), (self.canvas_height *0.98), 
-                            (self.canvas_width*0.98), start=hrise, extent = extent_set, fill='#0f3f5a', style=PIESLICE, tag='arc')
+        self.canvas.create_arc(x1, y1, x2, y2, start=hrise, extent = extent_set, fill='#0f3f5a', 
+                               style=PIESLICE, tag='arc')
         
         # Cria o arco vermelho, começando no horario do por do sol e indo até o nascer do sol.
-        self.canvas.create_arc((self.canvas_height*0.02), (self.canvas_width*0.02), (self.canvas_height *0.98), 
-                            (self.canvas_width*0.98), start=hset, extent = extent_rise, fill ='#c43b3b', style=PIESLICE, tag='arc')
+        self.canvas.create_arc(x1, y1, x2, y2, start=hset, extent = extent_rise, fill ='#c43b3b', 
+                               style=PIESLICE, tag='arc')
         
         # Cria um circulo preto de acabamento.
-        self.canvas.create_oval((self.canvas_height*0.11), (self.canvas_width*0.11), (self.canvas_height *0.89), 
-                                (self.canvas_width*0.89), width=3, fill='#000000', tag='arc')
+        self.canvas.create_oval((self.center[0] + self.new_value*0.80), (self.center[1]+ self.new_value*0.80), (self.center[0] - self.new_value*0.80), 
+                                    (self.center[1] - self.new_value*0.80), width=3, fill='#000000', tag='arc')
         
         # chama a função de desenho de números em cima do círculo preto e depois do gmt em cima dos arcos
         self.drawNumber()
@@ -266,7 +294,7 @@ class Clock(object):
     # @return Retorna uma tupla com as coordenadas x e y nessa ordem.
     def polar2Cartesian(self, angle, radius=1):
         angle -= pi/2       # É subtraído 90° para que a coordenada de 0° coincida com a hora 0 ou 12/24
-        radius = self.center[0] * radius
+        radius = self.new_value * radius
         x = radius * cos(angle)
         y = radius * sin(angle)
         return (x, y)
@@ -291,8 +319,8 @@ class Clock(object):
             y_start += self.center[1]
             
             # desenha o acabamento
-            self.canvas.create_oval((self.center[0]*1.04), (self.center[1]*1.04), (self.center[0]*0.96), 
-                                    (self.center[1]*0.96), fill='white', tag='handle')
+            self.canvas.create_oval((self.center[0] + self.new_value*0.04), (self.center[1]+ self.new_value*0.04), (self.center[0] - self.new_value*0.04), 
+                                    (self.center[1] - self.new_value*0.04), fill='white', tag='handle')
 
             # Desenha a base do ponteiro
             self.canvas.create_line(self.center[0], self.center[1], x_start, y_start, tag = 'handle', fill='white', 
@@ -304,8 +332,8 @@ class Clock(object):
         else:
             
             # desenha o acabamento
-            self.canvas.create_oval((self.center[0]*1.03), (self.center[1]*1.03), (self.center[0]*0.97), 
-                                    (self.center[1]*0.97), fill=color, tag='handle')
+            self.canvas.create_oval((self.center[0]+self.new_value*0.03), (self.center[1]+self.new_value*0.03), (self.center[0]-self.new_value*0.03), 
+                                    (self.center[1]-self.new_value*0.03), fill=color, tag='handle')
             if extend:
                 x_start, y_start = self.polar2Cartesian(angle, -0.1)
                 x_start += self.center[0]
@@ -344,8 +372,8 @@ class Clock(object):
         d_angle = fiveMinute * 3
         x, y = self.polar2Cartesian(d_angle, 0.47)
         x += self.center[0]
-        y += self.center[0]
-        self.canvas.create_text(x, y, text=d, fill='#f99703', font='Arial 20 bold', justify=CENTER)
+        y += self.center[1]
+        self.canvas.create_text(x, y, text=d, fill='#f99703', font='Arial 20 bold', justify=CENTER, tag='day')
         
         
         h = fiveMinute * (h + m / 60)
@@ -360,8 +388,8 @@ class Clock(object):
         self.drawHandle(m, 0.8, 15, 'black', outline = True)
         self.drawHandle(s, 0.85, 3, 'grey', extend = True)
         
-        self.canvas.create_oval((self.center[0]*1.01), (self.center[1]*1.01), (self.center[0]*0.99), 
-                                (self.center[1]*0.99), fill='black')
+        self.canvas.create_oval((self.center[0]+self.new_value*0.01), (self.center[1]+self.new_value*0.01), (self.center[0]-self.new_value*0.01), 
+                                (self.center[1]-self.new_value*0.01), fill='black')
         
         
 
