@@ -2,6 +2,7 @@
 # coding: utf-8
 #
 ## packing: clock
+# Create by: Arthur Branco
 #
 import json
 from math import sin, cos, pi
